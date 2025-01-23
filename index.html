@@ -6,6 +6,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"></link>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <script src="/socket.io/socket.io.js"></script>
     <style>
         body {
             font-family: 'Roboto', sans-serif;
@@ -91,10 +92,9 @@
             let showOwnerPrefix = true;
             let replyToMessage = null;
 
-            const socket = new WebSocket('wss://your-websocket-server-url');
+            const socket = io();
 
-            socket.addEventListener('message', function (event) {
-                const data = JSON.parse(event.data);
+            socket.on('receiveMessage', function (data) {
                 addMessage(data.username, data.message, data.isOwner, data.replyTo);
             });
 
@@ -162,7 +162,7 @@
                             isOwner: isOwner,
                             replyTo: replyToMessage
                         };
-                        socket.send(JSON.stringify(messageData));
+                        socket.emit('sendMessage', messageData);
                         addMessage(username, message, isOwner, replyToMessage);
                     }
                     messageInput.value = '';
