@@ -1,0 +1,183 @@
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Público</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"></link>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+        }
+        #cancelReply:focus {
+            outline: none;
+        }
+        #replyContainer {
+            user-select: none;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center h-screen">
+    <div id="app" class="w-full max-w-md mx-auto bg-white shadow-lg rounded-lg overflow-hidden">
+        <div class="bg-blue-500 p-4">
+            <h1 class="text-white text-2xl">Chat Público</h1>
+        </div>
+        <div class="p-4">
+            <div id="nameInputContainer" class="mb-4">
+                <label for="username" class="block text-gray-700">Introduce tu nombre:</label>
+                <input type="text" id="username" class="w-full p-2 border border-gray-300 rounded mt-2" placeholder="Tu nombre">
+                <button id="enterChat" class="w-full bg-blue-500 text-white p-2 rounded mt-2">Entrar al Chat</button>
+            </div>
+            <div id="passwordInputContainer" class="hidden mb-4">
+                <label for="password" class="block text-gray-700">Introduce la contraseña:</label>
+                <input type="password" id="password" class="w-full p-2 border border-gray-300 rounded mt-2" placeholder="Contraseña">
+                <button id="enterPassword" class="w-full bg-blue-500 text-white p-2 rounded mt-2">Entrar</button>
+                <button id="cancelPassword" class="w-full bg-red-500 text-white p-2 rounded mt-2">Cancelar</button>
+            </div>
+            <div id="commandsContainer" class="hidden mb-4">
+                <div class="bg-gray-200 p-4 rounded">
+                    <h2 class="text-xl font-bold mb-2">Comandos</h2>
+                    <ul class="list-disc list-inside">
+                        <li>/setmeowner</li>
+                        <li>/newuser</li>
+                        <li>/hideprefix</li>
+                        <li>/showprefix</li>
+                        <li>/comandos</li>
+                    </ul>
+                    <button id="closeCommands" class="w-full bg-red-500 text-white p-2 rounded mt-2">Cerrar</button>
+                </div>
+            </div>
+            <div id="chatContainer" class="hidden">
+                <div id="messages" class="h-64 overflow-y-scroll border border-gray-300 p-2 mb-4 bg-gray-50"></div>
+                <div id="replyContainer" class="hidden mb-2 p-2 bg-gray-200 rounded">
+                    <div class="flex justify-between items-center">
+                        <div id="replyText" class="text-gray-700"></div>
+                        <button id="cancelReply" class="text-red-500">Cancelar</button>
+                    </div>
+                </div>
+                <div class="flex flex-col">
+                    <div class="flex">
+                        <input type="text" id="messageInput" class="flex-1 p-2 border border-gray-300 rounded-l" placeholder="Escribe tu mensaje">
+                        <button id="sendMessage" class="bg-blue-500 text-white p-2 rounded-r">Enviar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            const badWords = ["puta", "polla", "nobres", "rima"];
+            const usernameInput = document.getElementById('username');
+            const enterChatButton = document.getElementById('enterChat');
+            const nameInputContainer = document.getElementById('nameInputContainer');
+            const passwordInputContainer = document.getElementById('passwordInputContainer');
+            const passwordInput = document.getElementById('password');
+            const enterPasswordButton = document.getElementById('enterPassword');
+            const cancelPasswordButton = document.getElementById('cancelPassword');
+            const commandsContainer = document.getElementById('commandsContainer');
+            const closeCommandsButton = document.getElementById('closeCommands');
+            const chatContainer = document.getElementById('chatContainer');
+            const messagesContainer = document.getElementById('messages');
+            const messageInput = document.getElementById('messageInput');
+            const sendMessageButton = document.getElementById('sendMessage');
+            const replyContainer = document.getElementById('replyContainer');
+            const replyText = document.getElementById('replyText');
+            const cancelReplyButton = document.getElementById('cancelReply');
+
+            let username = '';
+            let isOwner = false;
+            let showOwnerPrefix = true;
+            let replyToMessage = null;
+
+            enterChatButton.addEventListener('click', () => {
+                username = usernameInput.value.trim();
+                if (username) {
+                    nameInputContainer.classList.add('hidden');
+                    chatContainer.classList.remove('hidden');
+                }
+            });
+
+            enterPasswordButton.addEventListener('click', () => {
+                const password = passwordInput.value.trim();
+                if (password === 'pt0036521') {
+                    isOwner = true;
+                    passwordInputContainer.classList.add('hidden');
+                    chatContainer.classList.remove('hidden');
+                    addMessage('Sistema', 'Has sido establecido como OWNER.');
+                }
+            });
+
+            cancelPasswordButton.addEventListener('click', () => {
+                passwordInputContainer.classList.add('hidden');
+                chatContainer.classList.remove('hidden');
+            });
+
+            closeCommandsButton.addEventListener('click', () => {
+                commandsContainer.classList.add('hidden');
+                chatContainer.classList.remove('hidden');
+            });
+
+            sendMessageButton.addEventListener('click', sendMessage);
+            messageInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    sendMessage();
+                }
+            });
+
+            cancelReplyButton.addEventListener('click', () => {
+                replyToMessage = null;
+                replyContainer.classList.add('hidden');
+            });
+
+            function sendMessage() {
+                const message = messageInput.value.trim();
+                if (message) {
+                    if (message.toLowerCase() === '/setmeowner') {
+                        nameInputContainer.classList.add('hidden');
+                        chatContainer.classList.add('hidden');
+                        passwordInputContainer.classList.remove('hidden');
+                    } else if (message.toLowerCase() === '/newuser' && isOwner) {
+                        nameInputContainer.classList.remove('hidden');
+                        chatContainer.classList.add('hidden');
+                    } else if (message.toLowerCase() === '/hideprefix' && isOwner) {
+                        showOwnerPrefix = false;
+                    } else if (message.toLowerCase() === '/showprefix' && isOwner) {
+                        showOwnerPrefix = true;
+                    } else if (message.toLowerCase() === '/comandos' && isOwner) {
+                        chatContainer.classList.add('hidden');
+                        commandsContainer.classList.remove('hidden');
+                    } else if (!containsBadWords(message)) {
+                        addMessage(username, message, isOwner, replyToMessage);
+                    }
+                    messageInput.value = '';
+                    replyToMessage = null;
+                    replyContainer.classList.add('hidden');
+                }
+            }
+
+            function containsBadWords(message) {
+                return badWords.some(word => message.toLowerCase().includes(word));
+            }
+
+            function addMessage(username, message, isOwner = false, replyTo = null) {
+                const messageElement = document.createElement('div');
+                messageElement.classList.add('mb-2', 'p-2', 'bg-blue-100', 'rounded');
+                const ownerPrefix = isOwner && showOwnerPrefix ? '<span class="text-red-500 font-bold">OWNER</span> ' : '';
+                const replyTextContent = replyTo ? `<div class="text-gray-500 text-sm mb-1">Respondiendo a: <strong>${replyTo.username}</strong> - ${replyTo.message}</div>` : '';
+                messageElement.innerHTML = `${replyTextContent}<strong>${ownerPrefix}${username}:</strong> ${message}`;
+                messageElement.addEventListener('dblclick', () => {
+                    if (username !== 'Sistema') {
+                        replyToMessage = { username, message };
+                        replyText.innerHTML = `Respondiendo a: <strong>${username}</strong> - ${message}`;
+                        replyContainer.classList.remove('hidden');
+                    }
+                });
+                messagesContainer.appendChild(messageElement);
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            }
+        })();
+    </script>
+</body>
+</html>
