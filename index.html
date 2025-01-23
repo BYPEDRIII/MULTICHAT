@@ -91,6 +91,13 @@
             let showOwnerPrefix = true;
             let replyToMessage = null;
 
+            const socket = new WebSocket('wss://your-websocket-server-url');
+
+            socket.addEventListener('message', function (event) {
+                const data = JSON.parse(event.data);
+                addMessage(data.username, data.message, data.isOwner, data.replyTo);
+            });
+
             enterChatButton.addEventListener('click', () => {
                 username = usernameInput.value.trim();
                 if (username) {
@@ -149,6 +156,13 @@
                         chatContainer.classList.add('hidden');
                         commandsContainer.classList.remove('hidden');
                     } else if (!containsBadWords(message)) {
+                        const messageData = {
+                            username: username,
+                            message: message,
+                            isOwner: isOwner,
+                            replyTo: replyToMessage
+                        };
+                        socket.send(JSON.stringify(messageData));
                         addMessage(username, message, isOwner, replyToMessage);
                     }
                     messageInput.value = '';
